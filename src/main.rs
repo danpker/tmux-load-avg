@@ -1,10 +1,7 @@
-use std::cmp::Ordering;
-use sysinfo::{LoadAvg, SystemExt};
-
-use colored::*;
+use sysinfo::{LoadAvg, RefreshKind, System, SystemExt};
 
 fn main() {
-    let mut system = sysinfo::System::new();
+    let mut system: System = SystemExt::new_with_specifics(RefreshKind::new().with_cpu());
     system.refresh_cpu();
 
     let number_of_cpus = system.get_processors().len() as f64;
@@ -21,11 +18,9 @@ fn main() {
 fn format_load(load: f64, number_of_cpus: f64) -> String {
     let parsed = format!("{:.2}", load);
 
-    match load
-        .partial_cmp(&number_of_cpus)
-        .expect("Couldn't find a way to compare values.")
-    {
-        Ordering::Greater => parsed.red().to_string(),
-        Ordering::Equal | Ordering::Less => parsed,
+    match load {
+        n if n >= number_of_cpus => format!("#[fg=red]{}", parsed),
+        n if n >= number_of_cpus * 0.5 => format!("#[fg=yellow]{}", parsed),
+        _ => format!("#[fg=white]{}", parsed),
     }
 }
